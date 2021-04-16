@@ -2,9 +2,11 @@ package com.example.boxingbell;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -25,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
     TextView timerTextView;
     Button startGiveUpButton;
 
+    MediaPlayer mediaPlayer;
+
     protected void printTime(long millisecondsUntilFinished){
         int minutes = (int) (millisecondsUntilFinished / oneMinuteInMilliseconds);
         int seconds = (int) ((millisecondsUntilFinished / oneSecondInMilliseconds) - (minuteInSeconds * minutes));
@@ -33,11 +37,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void threeMinutesCountdownStop(){
+        mediaPlayer.start();
         threeMinutesCountdown.cancel();
         threeMinutesCountdown = null;
         oneMinuteCountdownInitialization();
     }
     protected void oneMinuteCountdownStop(){
+        mediaPlayer.start();
         oneMinuteCountdown.cancel();
         oneMinuteCountdown = null;
         threeMinutesCountdownInitialization();
@@ -87,6 +93,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.boxing_sound);
 
         viewsInitialization();
 
