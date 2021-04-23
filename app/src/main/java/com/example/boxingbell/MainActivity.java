@@ -1,18 +1,22 @@
 package com.example.boxingbell;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.Calendar;
 import java.util.Locale;
-
-import static java.lang.Integer.parseInt;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,8 +28,21 @@ public class MainActivity extends AppCompatActivity {
     CountDownTimer threeMinutesCountdown = null;
     CountDownTimer oneMinuteCountdown = null;
 
-    TextView timerTextView;
+    TextView timerTextView, clockTextView;
     Button startGiveUpButton;
+    ConstraintLayout layout;
+    ViewTreeObserver vto;
+
+    private final Handler clockHandler = new Handler();
+    private final Runnable clockRunnable = new Runnable() {
+        public void run() {
+            String time = String.format(Locale.getDefault(), "%02d:%02d:%02d", Calendar.getInstance().getTime().getHours(), Calendar.getInstance().getTime().getMinutes(), Calendar.getInstance().getTime().getSeconds());
+
+            clockTextView.setText(time);
+
+            clockHandler.postDelayed(this, 1000);
+        }
+    };
 
     MediaPlayer mediaPlayer;
 
@@ -50,8 +67,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void viewsInitialization(){
+        layout = findViewById(R.id.mainLayout);
         timerTextView = findViewById(R.id.timer);
+        clockTextView = findViewById(R.id.clock);
         startGiveUpButton = findViewById(R.id.startGiveUpButton);
+
+        vto = layout.getViewTreeObserver();
     }
     protected void threeMinutesCountdownInitialization(){
         threeMinutesCountdown = new CountDownTimer(threeMinutesInMilliseconds, oneSecondInMilliseconds) {
@@ -70,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
         threeMinutesCountdownInitialization();
         threeMinutesCountdown.start();
         startGiveUpButton.setText(getString(R.string.giveUpString));
+        startGiveUpButton.setBackgroundColor(startGiveUpButton.getContext().getResources().getColor(R.color.pink));
     }
     protected void resetCountdown(){
         if(threeMinutesCountdown != null){
@@ -81,8 +103,9 @@ public class MainActivity extends AppCompatActivity {
             oneMinuteCountdown = null;
         }
 
-        timerTextView.setText(getString(R.string.initTimerString));
+        timerTextView.setText(getString(R.string.timerString));
         startGiveUpButton.setText(getString(R.string.startString));
+        startGiveUpButton.setBackgroundColor(startGiveUpButton.getContext().getResources().getColor(R.color.cyan));
     }
     protected void timerActions(){
         if(startGiveUpButton.getText().equals("Start")) startCountdown();
@@ -92,13 +115,34 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        mediaPlayer = MediaPlayer.create(this, R.raw.boxing_sound);
-
         viewsInitialization();
 
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            private final ConstraintLayout layout = findViewById(R.id.mainLayout);
+
+            @Override
+            public void onGlobalLayout() {
+                this.layout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                final int layoutWidth  = layout.getMeasuredWidth();
+                final int layoutHeight = layout.getMeasuredHeight();
+
+                ViewGroup.LayoutParams startGiveUpButtonParams = startGiveUpButton.getLayoutParams();
+
+                startGiveUpButtonParams.width = (int) (layoutWidth / 3);
+                startGiveUpButtonParams.height = (int) (layoutHeight * 0.2);
+
+                startGiveUpButton.setLayoutParams(startGiveUpButtonParams);
+
+                clockTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) (layoutHeight * 0.1));
+                timerTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, (float) (layoutHeight * 0.5));
+            }
+        });
+        clockRunnable.run();
+        mediaPlayer = MediaPlayer.create(this, R.raw.boxing_sound);
         startGiveUpButton.setOnClickListener(new View.OnClickListener() {public void onClick(View v) { timerActions(); }});
     }
 }

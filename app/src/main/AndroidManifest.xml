@@ -9,7 +9,7 @@
         android:label="@string/appNameString"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Design.NoActionBar">
+        android:theme="@style/Theme.BoxingBell">
         <activity android:name=".MainActivity"
             android:screenOrientation="landscape">
             <intent-filter>
